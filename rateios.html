@@ -10,6 +10,7 @@
       background: #f1f5f9;
       margin: 0;
       padding: 2rem;
+      position: relative;
     }
 
     .container {
@@ -75,9 +76,42 @@
     .resultado p {
       margin: 0.2rem 0;
     }
+
+    /* Spinner */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      display: none;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #cbd5e1;
+      border-top: 5px solid #2563eb;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
+  <div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+  </div>
+
   <div class="container">
     <!-- Formulário de Lançamento -->
     <div class="card">
@@ -109,8 +143,8 @@
           <option value="Capao Sujo">Capao Sujo</option>
           <option value="Percentual Societario Todas Fazendas">Percentual Societario Todas Fazendas</option>
           <option value="Combustível Carro Mantibio">Combustível Carro Mantibio</option>
-		  <option value="Combustível Carro Capao Sujo">Combustível Carro Capao Sujo</option>
-		  <option value="Combustível Carro Percentual societario">Combustível Carro Percentual societario</option>
+          <option value="Combustível Carro Capao Sujo">Combustível Carro Capao Sujo</option>
+          <option value="Combustível Carro Percentual societario">Combustível Carro Percentual societario</option>
         </select>
 
         <label for="valorRateio">Valor da Despesa (R$)</label>
@@ -127,7 +161,20 @@
   </div>
 
   <script>
-    // Mascara para valores em reais
+    const loading = document.getElementById("loading");
+
+    const showLoading = () => {
+      loading.style.display = "flex";
+      return setTimeout(() => {
+        hideLoading();
+        alert("Tempo limite de resposta excedido.");
+      }, 60000);
+    };
+
+    const hideLoading = () => {
+      loading.style.display = "none";
+    };
+
     const formatarMoeda = (input) => {
       let valor = input.value.replace(/\D/g, '');
       valor = (valor / 100).toFixed(2) + '';
@@ -136,15 +183,14 @@
       input.value = 'R$ ' + valor;
     };
 
-    document.getElementById('valor').addEventListener('input', function() {
+    document.getElementById('valor').addEventListener('input', function () {
       formatarMoeda(this);
     });
 
-    document.getElementById('valorRateio').addEventListener('input', function() {
+    document.getElementById('valorRateio').addEventListener('input', function () {
       formatarMoeda(this);
     });
 
-    // Enviar lançamento para backend
     async function enviarLancamento() {
       const descricao = document.getElementById('descricao').value;
       const categoria = document.getElementById('categoria').value;
@@ -156,6 +202,8 @@
         valor: parseFloat(valor)
       };
 
+      const timeout = showLoading();
+
       try {
         const response = await fetch('https://lancamentosquattrocoffe.onrender.com/lancamentos', {
           method: 'POST',
@@ -165,6 +213,9 @@
           body: JSON.stringify(payload)
         });
 
+        clearTimeout(timeout);
+        hideLoading();
+
         if (response.ok) {
           alert('Lançamento salvo com sucesso!');
           document.getElementById('form-lancamento').reset();
@@ -172,59 +223,58 @@
           alert('Erro ao salvar lançamento.');
         }
       } catch (error) {
+        clearTimeout(timeout);
+        hideLoading();
         console.error(error);
         alert('Erro ao comunicar com o servidor.');
       }
     }
 
-    // Obter rateio do backend
     async function obterRateio() {
-    const centroCusto = document.getElementById("centroCusto").value;  // Pega o centro de custo selecionado
-    const valorDespesaInput = document.getElementById("valorRateio").value.replace(/[^\d,.-]/g, '').replace(',', '.');
+      const centroCusto = document.getElementById("centroCusto").value;
+      let valorDespesaBruto = document.getElementById("valorRateio").value;
+      let valorDespesaInput = valorDespesaBruto.replace(/[^\d,]/g, '').replace(/\./g, '').replace(',', '.');
 
-         // Verificar se o campo valorDespesa não está vazio e que o valor é válido
-         if (!valorDespesaInput || isNaN(valorDespesaInput.replace('R$', '').replace(',', '.'))) {
-             alert("Por favor, insira um valor válido para a despesa.");
-             return;
-         }
-         
-         const valorDespesa = parseFloat(valorDespesaInput.replace('R$', '').replace(',', '.'));
+      if (!valorDespesaInput || isNaN(parseFloat(valorDespesaInput))) {
+        alert("Por favor, insira um valor válido para a despesa.");
+        return;
+      }
 
+      const valorDespesa = parseFloat(valorDespesaInput);
 
-    try {
-      const response = await fetch(`https://lancamentosquattrocoffe.onrender.com/Rateios?centroCusto=${centroCusto}&valor=${valorDespesa}`);
-      const data = await response.json();
+      const timeout = showLoading();
 
-            
-      //  formatar os valores em R$
-      const formattedData = Object.entries(data).map(([nome, valor]) => {
-  return {
-    item1: nome,
-    item2: `R$ ${valor.toFixed(2).replace('.', ',')}`
-  };
-});
+      try {
+        const response = await fetch(`https://lancamentosquattrocoffe.onrender.com/Rateios?centroCusto=${centroCusto}&valor=${valorDespesa}`);
+        const data = await response.json();
 
-     // Exibir os valores no front-end
-    const resultDiv = document.getElementById("resultadoRateio");
-    const listaRateioDiv = document.getElementById("listaRateio");
-    resultDiv.style.display = "block"; // Torna a div visível
+        clearTimeout(timeout);
+        hideLoading();
 
-    // Limpa o conteúdo anterior
-    listaRateioDiv.innerHTML = "";
+        const formattedData = Object.entries(data).map(([nome, valor]) => {
+          return {
+            item1: nome,
+            item2: `R$ ${valor.toFixed(2).replace('.', ',')}`
+          };
+        });
 
-    // Adiciona os novos itens
-    formattedData.forEach(rateio => {
-      const div = document.createElement("div");
-      div.textContent = `${rateio.item1}: ${rateio.item2}`;
-      listaRateioDiv.appendChild(div);
-    });
+        const resultDiv = document.getElementById("resultadoRateio");
+        const listaRateioDiv = document.getElementById("listaRateio");
+        resultDiv.style.display = "block";
+        listaRateioDiv.innerHTML = "";
 
-
-    } catch (error) {
-      console.error("Erro ao obter o rateio:", error);
-                alert("Erro ao processar o rateio.");
+        formattedData.forEach(rateio => {
+          const div = document.createElement("div");
+          div.textContent = `${rateio.item1}: ${rateio.item2}`;
+          listaRateioDiv.appendChild(div);
+        });
+      } catch (error) {
+        clearTimeout(timeout);
+        hideLoading();
+        console.error("Erro ao obter o rateio:", error);
+        alert("Erro ao processar o rateio.");
+      }
     }
-  }
   </script>
 </body>
 </html>
