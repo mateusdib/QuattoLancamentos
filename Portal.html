@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Lançamentos</title>
+</head>
+<body>
+  <h1>Formulário de Lançamento</h1>
+  <form id="form">
+    <label>Data: <input type="date" name="data" required></label><br>
+    <label>Descrição: <input type="text" name="descricao" required></label><br>
+    <label>Valor: <input type="number" name="valor" step="0.01" required></label><br>
+    <button type="submit">Salvar</button>
+  </form>
+
+  <p id="mensagem"></p>
+
+  <script>
+    document.getElementById("form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const data = {
+        data: e.target.data.value,
+        descricao: e.target.descricao.value,
+        valor: parseFloat(e.target.valor.value)
+      };
+
+      const res = await fetch("https://lancamentosquattrocoffe.onrender.com/lancamentos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+
+      const msg = await res.json();
+      document.getElementById("mensagem").textContent = msg.message;
+      e.target.reset();
+    });
+  </script>
+</body>
+</html>
