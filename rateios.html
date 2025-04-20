@@ -105,6 +105,22 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    .botao-voltar {
+      display: inline-block;
+      margin-bottom: 1.5rem;
+      padding: 0.5rem 1rem;
+      background-color: #e5e7eb;
+      color: #111827;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+
+    .botao-voltar:hover {
+      background-color: #d1d5db;
+    }
   </style>
 </head>
 <body>
@@ -113,12 +129,20 @@
   </div>
 
   <div class="container">
+    <a href="menu.html" class="botao-voltar">← Voltar</a>
+
     <!-- Formulário de Lançamento -->
     <div class="card">
       <h2>Lançamento Financeiro</h2>
       <form id="form-lancamento">
         <label for="descricao">Descrição</label>
         <input type="text" id="descricao" name="descricao" required />
+
+        <label for="centroCusto">Centro de Custo</label>
+        <select id="centroCusto" name="centroCusto">
+          <option value="Mantibio">Mantibio</option>
+          <option value="Capao Sujo">Capao Sujo</option>
+        </select>
 
         <label for="categoria">Categoria</label>
         <select id="categoria" name="categoria">
@@ -195,11 +219,13 @@
       const descricao = document.getElementById('descricao').value;
       const categoria = document.getElementById('categoria').value;
       const valor = document.getElementById('valor').value.replace(/[^\d,]/g, '').replace(',', '.');
+      const centroDeCusto = document.getElementById('centroCusto').value;
 
       const payload = {
         descricao,
         categoria,
-        valor: parseFloat(valor)
+        valor: parseFloat(valor),
+        centroDeCusto
       };
 
       const timeout = showLoading();
