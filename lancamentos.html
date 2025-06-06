@@ -12,6 +12,7 @@
       margin: 0;
       padding: 20px;
     }
+
     .container {
       max-width: 1100px;
       margin: auto;
@@ -20,21 +21,31 @@
       padding: 30px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
+
     h2 {
       margin-bottom: 20px;
       text-align: center;
       font-size: 24px;
     }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 16px;
+      min-width: 800px;
     }
+
     th, td {
       padding: 12px;
       text-align: left;
       border-bottom: 1px solid #ddd;
+      white-space: nowrap;
     }
+
     .status {
       padding: 6px 10px;
       border-radius: 15px;
@@ -42,12 +53,15 @@
       color: white;
       display: inline-block;
     }
+
     .pago {
       background-color: #4CAF50;
     }
+
     .pendente {
       background-color: #FF9800;
     }
+
     .botao-voltar {
       display: inline-block;
       margin-top: 30px;
@@ -60,16 +74,20 @@
       transition: background 0.3s;
       font-size: 18px;
     }
+
     .botao-voltar:hover {
       background-color: #1abc9c;
     }
+
     .voltar-container {
       text-align: center;
     }
+
     .paginacao {
       text-align: center;
       margin-top: 20px;
     }
+
     .paginacao button {
       margin: 0 8px;
       padding: 12px 18px;
@@ -78,35 +96,78 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
-      font-size: 18px;
+      font-size: 16px;
     }
+
     .paginacao button:hover {
       background-color: #1abc9c;
     }
+
     .paginacao button:disabled {
       background-color: #ccc;
       cursor: default;
     }
+
     .loader {
       text-align: center;
       font-size: 18px;
       margin: 40px 0;
       color: #555;
     }
+
     .filtro-container {
       margin-bottom: 20px;
       text-align: center;
     }
+
     .filtro-container label {
       font-size: 16px;
       font-weight: bold;
       margin-right: 10px;
     }
+
     .filtro-container select {
-      padding: 8px;
+      padding: 10px;
       font-size: 16px;
       border-radius: 5px;
       border: 1px solid #ccc;
+      min-width: 150px;
+    }
+
+    /* Responsivo para telas menores */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+
+      .container {
+        padding: 20px 15px;
+      }
+
+      h2 {
+        font-size: 20px;
+      }
+
+      .filtro-container label,
+      .filtro-container select {
+        display: block;
+        margin: 10px auto;
+        text-align: left;
+      }
+
+      .paginacao button {
+        font-size: 14px;
+        padding: 10px 14px;
+      }
+
+      .botao-voltar {
+        font-size: 16px;
+        padding: 10px 20px;
+      }
+
+      table {
+        font-size: 14px;
+      }
     }
   </style>
 </head>
@@ -117,32 +178,33 @@
     <div class="filtro-container">
       <label for="filtroStatus">Filtrar por status:</label>
       <select id="filtroStatus" onchange="carregarLancamentos()">
-	    <option value="false">Pendentes</option>
+        <option value="false">Pendentes</option>
         <option value="true">Pagos</option>
-        
       </select>
     </div>
 
     <div id="loader" class="loader">Carregando lançamentos...</div>
 
-    <table style="display: none;" id="tabela">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Descrição</th>
-          <th>Usuário Rateio</th>
-          <th>Centro de Custo</th>
-          <th>Percentual</th>
-          <th>Valor</th>
-          <th>Valor Lançado</th>
-          <th>Status</th>
-          <th>Data Lançamento</th>
-          <th>Data Vencimento</th>
-          <th>Categoria</th>
-        </tr>
-      </thead>
-      <tbody id="tabela-pagamentos"></tbody>
-    </table>
+    <div class="table-wrapper">
+      <table style="display: none;" id="tabela">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Descrição</th>
+            <th>Usuário Rateio</th>
+            <th>Centro de Custo</th>
+            <th>Percentual</th>
+            <th>Valor</th>
+            <th>Valor Lançado</th>
+            <th>Status</th>
+            <th>Data Lançamento</th>
+            <th>Data Vencimento</th>
+            <th>Categoria</th>
+          </tr>
+        </thead>
+        <tbody id="tabela-pagamentos"></tbody>
+      </table>
+    </div>
 
     <div class="paginacao" style="display: none;" id="paginacao">
       <button id="anterior" onclick="paginaAnterior()">Anterior</button>

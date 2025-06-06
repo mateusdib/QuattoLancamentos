@@ -90,6 +90,26 @@
       font-weight: bold;
     }
 
+    .voltar-container {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .botao-voltar {
+      display: inline-block;
+      padding: 12px 25px;
+      background-color: var(--cor-principal);
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      transition: background-color 0.3s;
+    }
+
+    .botao-voltar:hover {
+      background-color: var(--cor-hover);
+    }
+
     @media (max-width: 768px) {
       body {
         padding: 10px;
@@ -107,6 +127,11 @@
       button {
         padding: 5px 8px;
         font-size: 0.85rem;
+      }
+
+      .botao-voltar {
+        padding: 10px 20px;
+        font-size: 0.9rem;
       }
     }
   </style>
@@ -134,6 +159,10 @@
         <!-- lançamentos aqui -->
       </tbody>
     </table>
+  </div>
+
+  <div class="voltar-container">
+    <a href="menu.html" class="botao-voltar">← Voltar para o Menu</a>
   </div>
 
   <script>
