@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lançamentos Pendentes</title>
+  <style>
+    :root {
+      --cor-principal: #2c3e50;
+      --cor-secundaria: #1abc9c;
+      --cor-hover: #16a085;
+      --cor-fundo: #f9f9f9;
+      --cor-tabela: #ffffff;
+      --cor-borda: #ddd;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--cor-fundo);
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--cor-principal);
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+    }
+
+    .tabela-container {
+      overflow-x: auto;
+      background-color: var(--cor-tabela);
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 850px;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      border: 1px solid var(--cor-borda);
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    th {
+      background-color: var(--cor-principal);
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    td {
+      background-color: white;
+    }
+
+    button {
+      background-color: var(--cor-secundaria);
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 5px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: var(--cor-hover);
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .status-pendente {
+      color: red;
+      font-weight: bold;
+    }
+
+    .status-pago {
+      color: green;
+      font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      th, td {
+        font-size: 0.85rem;
+        padding: 8px;
+      }
+
+      button {
+        padding: 5px 8px;
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Lançamentos Pendentes</h1>
+
+  <div class="tabela-container">
+    <table id="tabelaLancamentos">
+      <thead>
+        <tr>
+          <th>Descrição</th>
+          <th>Centro de Custo</th>
+          <th>%</th>
+          <th>Valor</th>
+          <th>Valor Lançado</th>
+          <th>Status</th>
+          <th>Data Lançamento</th>
+          <th>Data Vencimento</th>
+          <th>Categoria</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- lançamentos aqui -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const usuarioId = localStorage.getItem('usuarioId');
+    if (!usuarioId) {
+      alert('Usuário não identificado. Faça login novamente.');
+      window.location.href = 'index.html';
+    }
+
+    const tabelaBody = document.querySelector('#tabelaLancamentos tbody');
+
+    function formatarValor(valor) {
+      return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function formatarData(dataString) {
+      if (!dataString) return '';
+      return dataString.split('T')[0];
+    }
+
+    async function carregarLancamentos() {
+      try {
+        const response = await fetch(`https://lancamentosquattrocoffe.fly.dev/lancamentos/GetByUserIdAndStatusPagamento?idUser=${usuarioId}&pago=false&totalItens=200`);
+        if (!response.ok) throw new Error('Erro ao buscar lançamentos');
+
+        const dados = await response.json();
+        tabelaBody.innerHTML = '';
+
+        if (dados.length === 0) {
+          tabelaBody.innerHTML = `<tr><td colspan="10">Nenhum lançamento pendente encontrado.</td></tr>`;
+          return;
+        }
+
+        dados.forEach(item => {
+          const tr = document.createElement('tr');
+
+          tr.innerHTML = `
+            <td>${item.descricao}</td>
+            <td>${item.descricaoCentroDeCusto || ''}</td>
+            <td>${item.percentual ?? 0}%</td>
+            <td>${formatarValor(item.valor ?? 0)}</td>
+            <td>${formatarValor(item.valorLancado ?? 0)}</td>
+            <td class="${item.isPago === 'Pago' ? 'status-pago' : 'status-pendente'}">${item.isPago}</td>
+            <td>${formatarData(item.dataLancamento)}</td>
+            <td>${formatarData(item.dataVencimento)}</td>
+            <td>${item.categoria}</td>
+            <td><button data-id="${item.id}" ${item.isPago === 'Pago' ? 'disabled' : ''}>Marcar como Pago</button></td>
+          `;
+          tabelaBody.appendChild(tr);
+        });
+
+        tabelaBody.querySelectorAll('button').forEach(btn => {
+          btn.addEventListener('click', marcarComoPago);
+        });
+
+      } catch (error) {
+        alert('Erro: ' + error.message);
+      }
+    }
+
+    async function marcarComoPago(e) {
+      const botao = e.target;
+      const id = botao.getAttribute('data-id');
+
+      if (!confirm('Deseja realmente marcar como pago?')) return;
+
+      try {
+        const response = await fetch(`https://lancamentosquattrocoffe.fly.dev/lancamentos/postLancamentoByIdStatus?idLancamento=${id}&pago=true`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const data = await response.text();
+
+        if (response.ok && data.includes('Dados atualizados com sucesso')) {
+          alert('Lançamento marcado como pago com sucesso!');
+          carregarLancamentos();
+        } else {
+          throw new Error(data || 'Erro ao atualizar');
+        }
+
+      } catch (error) {
+        alert('Erro: ' + error.message);
+      }
+    }
+
+    carregarLancamentos();
+  </script>
+</body>
+</html>
