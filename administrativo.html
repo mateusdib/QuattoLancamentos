@@ -81,7 +81,7 @@
     }
 
     .status-pendente {
-      color: red;
+      color: orange;
       font-weight: bold;
     }
 
@@ -146,8 +146,8 @@
           <th>Descrição</th>
           <th>Centro de Custo</th>
           <th>%</th>
-          <th>Valor</th>
-          <th>Valor Lançado</th>
+          <th>Valor a Pagar</th>
+          <th>Valor Total Lançamento</th>
           <th>Status</th>
           <th>Data Lançamento</th>
           <th>Data Vencimento</th>
@@ -199,17 +199,22 @@
         dados.forEach(item => {
           const tr = document.createElement('tr');
 
+          // Define status e classe
+          const statusPago = (item.isPago === true || item.isPago === 'true');
+          const statusTexto = statusPago ? 'Pago' : 'Pendente';
+          const statusClasse = statusPago ? 'status-pago' : 'status-pendente';
+
           tr.innerHTML = `
             <td>${item.descricao}</td>
             <td>${item.descricaoCentroDeCusto || ''}</td>
             <td>${item.percentual ?? 0}%</td>
             <td>${formatarValor(item.valor ?? 0)}</td>
             <td>${formatarValor(item.valorLancado ?? 0)}</td>
-            <td class="${item.isPago === 'Pago' ? 'status-pago' : 'status-pendente'}">${item.isPago}</td>
+            <td class="${statusClasse}">${statusTexto}</td>
             <td>${formatarData(item.dataLancamento)}</td>
             <td>${formatarData(item.dataVencimento)}</td>
             <td>${item.categoria}</td>
-            <td><button data-id="${item.id}" ${item.isPago === 'Pago' ? 'disabled' : ''}>Marcar como Pago</button></td>
+            <td><button data-id="${item.id}" ${statusPago ? 'disabled' : ''}>Marcar como Pago</button></td>
           `;
           tabelaBody.appendChild(tr);
         });
