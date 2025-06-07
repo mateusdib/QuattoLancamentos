@@ -60,6 +60,12 @@
       background-color: white;
     }
 
+    tfoot td {
+      font-weight: bold;
+      background-color: #f0f0f0;
+      text-align: center;
+    }
+
     button {
       background-color: var(--cor-secundaria);
       color: white;
@@ -158,6 +164,9 @@
       <tbody>
         <!-- lançamentos aqui -->
       </tbody>
+      <tfoot>
+        <!-- totais vão aqui -->
+      </tfoot>
     </table>
   </div>
 
@@ -173,6 +182,7 @@
     }
 
     const tabelaBody = document.querySelector('#tabelaLancamentos tbody');
+    const tabelaFoot = document.querySelector('#tabelaLancamentos tfoot');
 
     function formatarValor(valor) {
       return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -190,11 +200,16 @@
 
         const dados = await response.json();
         tabelaBody.innerHTML = '';
+        tabelaFoot.innerHTML = '';
 
         if (dados.length === 0) {
           tabelaBody.innerHTML = `<tr><td colspan="10">Nenhum lançamento pendente encontrado.</td></tr>`;
           return;
         }
+
+        // Variáveis para totalizar
+        let totalValor = 0;
+        let totalValorLancado = 0;
 
         dados.forEach(item => {
           const tr = document.createElement('tr');
@@ -203,6 +218,10 @@
           const statusPago = (item.isPago === true || item.isPago === 'true');
           const statusTexto = statusPago ? 'Pago' : 'Pendente';
           const statusClasse = statusPago ? 'status-pago' : 'status-pendente';
+
+          // Acumula os valores para totalizar
+          totalValor += Number(item.valor ?? 0);
+          totalValorLancado += Number(item.valorLancado ?? 0);
 
           tr.innerHTML = `
             <td>${item.descricao}</td>
@@ -218,6 +237,16 @@
           `;
           tabelaBody.appendChild(tr);
         });
+
+        // Adiciona linha de total no rodapé da tabela
+        const trTotal = document.createElement('tr');
+        trTotal.innerHTML = `
+          <td colspan="3" style="text-align: right;">Total:</td>
+          <td>${formatarValor(totalValor)}</td>
+          <td>${formatarValor(totalValorLancado)}</td>
+          <td colspan="5"></td>
+        `;
+        tabelaFoot.appendChild(trTotal);
 
         tabelaBody.querySelectorAll('button').forEach(btn => {
           btn.addEventListener('click', marcarComoPago);
